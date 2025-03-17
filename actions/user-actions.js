@@ -123,3 +123,15 @@ export async function doCredentialLogin(formData) {
     }
    
   }
+
+  export async function doSocialLogin(provider) {
+    try {
+          await signIn(provider, { redirect: false })
+        } 
+    catch (error) {
+      if (error instanceof AuthError) {
+        return "Failed to login with " + provider + " account.";
+      }
+        throw error;
+      }
+  }
