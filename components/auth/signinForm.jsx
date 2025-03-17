@@ -1,107 +1,115 @@
-"use client";
-import Checkbox from "@/components/form/input/checkbox";
+'use client';
+
+import React, { Fragment } from 'react';
+import { useState, useEffect } from "react";
+import Button from "@/components/ui/button/button";
 import Input from "@/components/form/input/inputField";
 import Label from "@/components/form/label";
-import Button from "@/components/ui/button/button";
-import {FcGoogle, } from "react-icons/fc";
-import { ChevronLeftIcon, ChevronRightIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
-import React, { useState } from "react";
 import SocialButtons from './social-buttons';
+import Link from 'next/link';
+import { useRouter } from "next/navigation";
+import { ArrowRightIcon, AtSymbolIcon,  KeyIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/solid';
+import { toast } from 'react-toastify';
+import { ZodErrors } from "@/components/common/zod-errors";
+import { doCredentialLogin } from '@/actions/user-actions';
+import { useSearchParams } from 'next/navigation';
 
-export default function SignInForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+
+
+const SignInForm = () => {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+
+  const router = useRouter();
+  const [state, setState] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if(error === 'OAuthAccountNotLinked'){
+          toast.error("This email was registered with email and passowrd. Please sign in using your credentials.")
+      }
+    }, [])
+  
+  
+ 
+  async function onSubmit(event) {
+    event.preventDefault();
+    try {
+        const formData = new FormData(event.currentTarget);
+        const response = await doCredentialLogin(formData);
+        if (response.error) {
+            setState(response);
+            toast.error(response.error);
+        } else {
+            router.push("/dashboard");
+        }
+    } catch (e) {
+      toast.error("Check your Credentials: " + e);
+    }
+ }
+
   return (
-   <div className="flex flex-col flex-1 lg:w-1/2 w-full">
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-        <div>
-          <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign In
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
-            </p>
-          </div>
-          <div>
-            <SocialButtons/>
-            <div className="relative py-3 sm:py-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="p-2 text-gray-400 bg-white dark:bg-gray-900 sm:px-5 sm:py-2">
-                  Or
-                </span>
-              </div>
-            </div>
-            <form>
-              <div className="space-y-6">
-                <div>
-                  <Label>
-                    Email <span className="text-error-500">*</span>{" "}
-                  </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
-                </div>
-                <div>
-                  <Label>
-                    Password <span className="text-error-500">*</span>{" "}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                    />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                      ) : (
-                        <EyeSlashIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
-                    <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
-                    </span>
-                  </div>
-                  <Link
-                    href="/reset-password"
-                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
-                  </Button>
-                </div>
-              </div>
-            </form>
+    <Fragment>
+   <div className="w-full max-w-sm mx-auto space-y-6 bg-white p-4 rounded-lg">
+      <h1 className="text-2xl font-bold text-center mb-2">Sign In</h1>
+        <SocialButtons/>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with email
+          </span>
+        </div>
+      </div>
+      <form onSubmit={onSubmit} className="space-y-2"  >
+      <div className="relative">
+      <Label> Email: <span className="text-error-500">*</span>{" "}</Label>
+        <Input
+         name="email"
+          placeholder="Email"
+          className="pl-6"
+          type="email"
+          autoComplete="email"
+        /><AtSymbolIcon className="pointer-events-none absolute left-1 top-2/3 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+        </div>
+        <ZodErrors error={state?.zodErrors?.email} />
+        <div className="relative">
+        <Label> Password: <span className="text-error-500">*</span>{" "}</Label>
+        <Input
+          name="password"
+          placeholder="Password"
+          className="pl-6"
+          value={password}
+          type={visible ? "text" : "password"}
+          autoComplete="current-password"
+          minLength={6}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+          <KeyIcon className="pointer-events-none absolute left-1 top-2/3 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            <span onClick={() => setVisible(!visible)} className="cursor-pointer absolute right-3 top-2/3 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900">
+             {!visible ? <EyeSlashIcon /> : <EyeIcon />} 
+            </span>
+        </div>
+        <ZodErrors error={state?.zodErrors?.password} />
+        <Button className="w-full mt-4" size="sm" type="submit">
+          Sign In <ArrowRightIcon className="h-5 w-5 text-gray-50" />
+        </Button>
+      </form>
 
-            <div className="mt-5">
+        <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Don&apos;t have an account? {""}
-                <Link
-                  href="/signup"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
+                <Link  href="/signup" className="text-brand-500 hover:text-brand-600 dark:text-brand-400" >
                   Sign Up
                 </Link>
               </p>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-    
-  );
+    </Fragment>
+  )
 }
+
+export default SignInForm
