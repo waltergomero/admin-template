@@ -8,6 +8,20 @@ import { userSignupSchema, userSigninSchema, userUpdateSchema } from "@/schemas/
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+//fetch user by id
+export const fetchUserById = async (id) => {
+  try {
+    const _user = await prisma.User.findUnique({
+      where: {id: id},
+      include:{ accounts: true},
+      });
+    const user = JSON.parse(JSON.stringify(_user));
+    return user
+  } catch (err) {
+    return({error: err + "Failed to fetch user!"});
+  }
+};
+
 
 // create user 
 export async function createUser( formData, signup=false) {
@@ -18,7 +32,7 @@ export async function createUser( formData, signup=false) {
     const first_name = formData.get("first_name");
     const last_name = formData.get("last_name");
     const name = formData.get("first_name") + ", " + formData.get("last_name");
-    const email = formData.get("email");
+    const email = formData.get("email").lowercase();
     const password = formData.get("password");
     const isadmin = _isAdmin ? true : false;
     const isactive = true;
