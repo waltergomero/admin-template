@@ -7,6 +7,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { userSignupSchema, userSigninSchema, userUpdateSchema } from "@/schemas/validation-schemas";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import {prisma} from "@/prisma/prisma";
 
 //fetch user by id
 export const fetchUserById = async (id) => {
@@ -22,17 +23,61 @@ export const fetchUserById = async (id) => {
   }
 };
 
+export async function fetchUserByEmail(email) {
+  try {
+    return await prisma.User.findUnique({where: {email: email}});
+
+  } catch (error) {
+
+    throw new Error('Failed to fetch User.');
+  }
+}
+  
+export async function fetchUserByEmailAndProvider(email, provider) {
+  try {
+    if(provider == "credentials" || provider == "")
+      {
+        return await prisma.User.findUnique({
+          where: {email: email},
+          select:{email: tru, provider:true} 
+      });
+      }
+    else{
+        return await prisma.Account.findUnique({
+        where: {email: email},
+        select:{email: tru, provider:true} 
+      });
+    }
+
+  } catch (error) {
+
+    throw new Error('Failed to fetch User.');
+  }
+}
+
+export async function fetchUserByEmailInAccount(email) {
+  try {
+      const result = await prisma.User.findUnique({
+          where: {email: email},
+          include:{ accounts: true},
+      });
+      return result;
+  } catch (error) {
+
+    throw new Error('Failed to fetch User. ' + error.message);
+  }
+}
 
 // create user 
 export async function createUser( formData, signup=false) {
-  const redirectPath = signup ? "/login" : "/admin/users";
+  const redirectPath = signup ? "/signin" : "/admin/users";
 
   try {
     const _isAdmin = formData.get("isadmin");
     const first_name = formData.get("first_name");
     const last_name = formData.get("last_name");
     const name = formData.get("first_name") + ", " + formData.get("last_name");
-    const email = formData.get("email").lowercase();
+    const email = formData.get("email").toLowerCase();
     const password = formData.get("password");
     const isadmin = _isAdmin ? true : false;
     const isactive = true;
@@ -80,7 +125,6 @@ export async function createUser( formData, signup=false) {
       isadmin,
       isactive,
       provider,
-      type,
       created_by: created_by,
       updated_by: updated_by,
     };

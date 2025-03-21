@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.8.0",
     "@heroicons/react": "^2.2.0",
+    "@prisma/client": "^6.5.0",
     "bcryptjs": "^3.0.2",
     "next": "15.2.2",
     "next-auth": "^5.0.0-beta.25",
@@ -25,6 +27,7 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.2.2",
+    "prisma": "^6.5.0",
     "tailwindcss": "^4"
   }
 }

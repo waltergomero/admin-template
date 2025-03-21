@@ -3,11 +3,11 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import bcryptjs from "bcryptjs";
 import { userSigninSchema } from "@/schemas/validation-schemas";
-//import { PrismaAdapter } from "@auth/prisma-adapter"
-//import  prisma  from "@/lib/prisma"
+import fetchUserByEmail from "@/actions/user-actions";
+import NextAuth from "next-auth"
+import { prisma } from "@/prisma/prisma"
 
 export default {
-    //adapter: PrismaAdapter(prisma),
     providers: [
       Credentials({
         credentials: {
@@ -25,9 +25,8 @@ export default {
             const { email, password } = credentials;
             
             try {         
-               const user = "test"; //await prisma.User.findUnique({where: {email: email}});
-               if(!user.password)
-               {
+               const user = await prisma.User.findUnique({where: {email: email}});
+               if(!user.password) {
                 throw new Error("Another account already exists with the same e-mail address. This email was registered with Google app.");
                }
 
